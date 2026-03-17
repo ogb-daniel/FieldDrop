@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import type { SketchInput } from "../utils/validation.js";
 
 export class SketchService {
-  async saveSketch({ name, area, geojson }: SketchInput) {
+  async createSketch({ name, area, geojson }: SketchInput) {
     const geojsonStr =
       typeof geojson === "string" ? geojson : JSON.stringify(geojson);
     const result = await prisma.$queryRaw`
