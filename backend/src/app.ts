@@ -1,10 +1,11 @@
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
+import sketchRoutes from "./routes/sketches.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+app.use("/sketches", sketchRoutes);
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ status: "UP", timestamp: new Date() });
 });
