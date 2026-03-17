@@ -10,6 +10,10 @@ export const NearbySketchSchema = z.object({
   lat: z.string(),
   radius: z.number().optional(),
 });
+export const OfflineSketchSchema = z.object({
+  sketches: z.array(SketchSchema).min(1),
+});
 
 export type SketchInput = z.infer<typeof SketchSchema>;
 export type NearbySketch = z.infer<typeof NearbySketchSchema>;
+export type OfflineSketchInput = z.infer<typeof OfflineSketchSchema>;

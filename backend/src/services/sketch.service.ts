@@ -1,6 +1,10 @@
 import type { Sketch } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
-import type { NearbySketch, SketchInput } from "../utils/validation.js";
+import type {
+  NearbySketch,
+  OfflineSketchInput,
+  SketchInput,
+} from "../utils/validation.js";
 
 export class SketchService {
   async createSketch({ name, area, geojson }: SketchInput) {
@@ -35,5 +39,28 @@ export class SketchService {
     );
     `;
     return nearbySketches;
+  }
+
+  async syncOfflineSketches({ sketches }: OfflineSketchInput) {
+    const savedIds = [];
+
+    for (const sketch of sketches) {
+      const { name, area, geojson } = sketch;
+      const geojsonStr =
+        typeof geojson === "string" ? geojson : JSON.stringify(geojson);
+      const result: any = await prisma.$queryRaw`
+        INSERT INTO "Sketch" (id, name, area, "createdAt", geom)
+        VALUES (
+            gen_random_uuid(),
+            ${name},
+            ${area},
+            now(),
+            ST_SetSRID(ST_GeomFromGeoJSON(${geojsonStr}), 4326)
+        )
+        RETURNING id;
+        `;
+      savedIds.push(result[0].id);
+      return { synced: savedIds.length, ids: savedIds };
+    }
   }
 }

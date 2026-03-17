@@ -5,4 +5,5 @@ const router = Router();
 
 router.post("/", SketchController.createSketch);
 router.get("/nearby", SketchController.findNearBySketches);
+router.get("/sync", SketchController.syncOfflineSketches);
 export default router;
