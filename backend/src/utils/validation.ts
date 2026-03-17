@@ -5,5 +5,11 @@ export const SketchSchema = z.object({
   area: z.string(),
   geojson: z.string(),
 });
+export const NearbySketchSchema = z.object({
+  lng: z.string(),
+  lat: z.string(),
+  radius: z.number().optional(),
+});
 
 export type SketchInput = z.infer<typeof SketchSchema>;
+export type NearbySketch = z.infer<typeof NearbySketchSchema>;

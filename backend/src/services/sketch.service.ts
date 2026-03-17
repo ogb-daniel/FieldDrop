@@ -1,6 +1,6 @@
 import type { Sketch } from "../generated/prisma/client.js";
 import { prisma } from "../lib/prisma.js";
-import type { SketchInput } from "../utils/validation.js";
+import type { NearbySketch, SketchInput } from "../utils/validation.js";
 
 export class SketchService {
   async createSketch({ name, area, geojson }: SketchInput) {
@@ -18,5 +18,22 @@ export class SketchService {
     `;
 
     return result;
+  }
+
+  async findNearbySketches({ lat, lng, radius = 50 }: NearbySketch) {
+    const longitude = parseFloat(lng as string);
+    const latitude = parseFloat(lat as string);
+    const rad = parseFloat(radius as unknown as string);
+
+    const nearbySketches = await prisma.$queryRaw`
+    SELECT id, name, area, "createdAt", ST_AsGeoJSON(geom)::json as geojson
+    FROM "Sketch"
+    WHERE ST_DWithin(
+        geom::geography,
+        ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}),4326)::geography,
+        ${rad}
+    );
+    `;
+    return nearbySketches;
   }
 }
