@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  extensions = [postgis(version:"3")]
+}
+
+model Sketch {
+  id  String @id @default(uuid())
+  name String?
+  area Float?
+  createdAt DateTime @default(now())
+
+  geom Unsupported("geometry(Geometry, 4326)")
+
+  @@index([geom], name: "sketch_geom_idx",type: Gist)
+
+}
