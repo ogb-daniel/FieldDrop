@@ -1,1 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Bebas+Neue&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
 @import "tailwindcss";
+
+@theme {
+  --font-roboto: "Roboto", sans-serif;
+  --font-babas: "Bebas Neue", sans-serif;
+  --font-architect: "Architects Daughter", cursive;
+}
