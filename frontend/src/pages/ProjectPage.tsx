@@ -1,10 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SketchCanvas } from "../components/SketchCanvas";
 import { Shield, MoreVertical, Share, Save } from "lucide-react";
+import { useParams } from "react-router-dom";
+import type { Project } from "../types/project";
+import apiClient from "../api/client";
+import { AxiosError } from "axios";
 
 export const ProjectPage = () => {
-  const [projectName, setProjectName] = useState("Untitled Project");
+  const { id } = useParams();
+
+  const [project, setProject] = useState<Project | null>(null);
+
+  const [projectName, setProjectName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    apiClient
+      .get<Project>(`projects/${id}`)
+      .then((res) => {
+        setProject(res.data);
+        setProjectName(res.data.name);
+      })
+      .catch((error: unknown) => {
+        if (error instanceof AxiosError) {
+          console.error(error.response?.data);
+        } else if (error instanceof Error) {
+          console.error(error.message);
+        } else {
+          console.error("An error occured");
+        }
+      });
+  }, [id]);
+
+  const handleSave = async () => {
+    try {
+      const response = await apiClient.patch(`/projects/${id}`, {
+        name: projectName,
+      });
+      console.log(response.data);
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error(error.response?.data);
+      } else if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("An error occured");
+      }
+    }
+  };
 
   return (
     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-gray-50">
@@ -41,7 +84,10 @@ export const ProjectPage = () => {
         <button className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-colors ml-1">
           <Share size={18} />
         </button>
-        <button className="ml-2 bg-blue-50 drop-shadow-sm hover:bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1.5 rounded-md transition-colors flex items-center">
+        <button
+          onClick={handleSave}
+          className="ml-2 bg-blue-50 drop-shadow-sm hover:bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1.5 rounded-md transition-colors flex items-center"
+        >
           <Save size={16} className="mr-1.5" />
           Save
         </button>

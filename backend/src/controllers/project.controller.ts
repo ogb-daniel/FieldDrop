@@ -40,4 +40,18 @@ export class ProjectController {
       next(error);
     }
   }
+  static async updateProject(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await projectService.updateProject(
+        req.params.id as string,
+        req.body,
+      );
+
+      res.json(result);
+    } catch (error) {
+      console.log("Error updating project:", error);
+
+      next(error);
+    }
+  }
 }

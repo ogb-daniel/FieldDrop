@@ -17,6 +17,7 @@ export const OfflineSketchSchema = z.object({
 export const CreateProjectSchema = z.object({
   name: z.string().optional(),
 });
+
 export const GetProjectSchema = z.object({
   id: z.uuid(),
 });

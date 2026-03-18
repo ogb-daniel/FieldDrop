@@ -29,4 +29,17 @@ export class ProjectService {
     });
     return result;
   }
+
+  async updateProject(
+    id: string,
+    data: { name?: string; canvasState?: any[]; polygons?: any[] },
+  ) {
+    const result = await prisma.project.update({
+      where: {
+        id,
+      },
+      data: data,
+    });
+    return result;
+  }
 }
