@@ -35,4 +35,5 @@ model Project {
   createdAt DateTime @default(now())
 
   sketches Sketch[]
+  canvas_state Json?
 }
