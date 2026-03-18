@@ -48,7 +48,7 @@ export const HomePage = () => {
     >
       <div
         ref={ref}
-        className="absolute md:static h-full -translate-x-[279px] md:translate-x-0 transition-all duration-500 bg-white border-r border-gray-200"
+        className="absolute md:static h-full -translate-x-[279px] md:translate-x-0 transition-all duration-200 bg-white border-r border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
         <Sidebar />
