@@ -1,8 +1,13 @@
+import "dotenv/config";
+
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import sketchRoutes from "./routes/sketches.js";
 import projectRoutes from "./routes/projects.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
