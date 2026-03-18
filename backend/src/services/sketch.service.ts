@@ -7,18 +7,19 @@ import type {
 } from "../utils/validation.js";
 
 export class SketchService {
-  async createSketch({ name, area, geojson }: SketchInput) {
+  async createSketch({ name, area, geojson, projectId }: SketchInput) {
     const geojsonStr =
       typeof geojson === "string" ? geojson : JSON.stringify(geojson);
     const result = await prisma.$queryRaw`
-    INSERT INTO "Sketch" (id, name, area, "createdAt", geom) VALUES (
+    INSERT INTO "Sketch" (id, name, area, "createdAt",projectId, geom) VALUES (
         gen_random_uuid(),
         ${name},
         ${area},
         now(),
+        ${projectId},
         ST_SetSRID(ST_GeomFromGeoJSON(${geojsonStr}), 4326)
     )
-    RETURNING id, name, area, "createdAt";
+    RETURNING id, name, area, "createdAt", projectId;
     `;
 
     return result;
