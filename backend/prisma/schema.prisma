@@ -20,8 +20,19 @@ model Sketch {
   area Float?
   createdAt DateTime @default(now())
 
+  projectId String
+  project Project @relation(fields: [projectId], references: [id])
+
   geom Unsupported("geometry(Geometry, 4326)")
 
   @@index([geom], name: "sketch_geom_idx",type: Gist)
 
+}
+
+model Project {
+  id String @id @default(uuid())
+  name String
+  createdAt DateTime @default(now())
+
+  sketches Sketch[]
 }
