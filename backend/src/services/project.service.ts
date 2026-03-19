@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import type {
   CreateProjectInput,
   GetProjectInput,
+  SketchInput,
 } from "../utils/validation.js";
 
 export class ProjectService {
@@ -32,13 +33,39 @@ export class ProjectService {
 
   async updateProject(
     id: string,
-    data: { name?: string; canvasState?: any[]; polygons?: any[] },
+    data: { name?: string; canvasState?: any[]; polygons?: SketchInput[] },
   ) {
-    const result = await prisma.project.update({
-      where: {
-        id,
-      },
-      data: data,
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedProject = await tx.project.update({
+        where: { id },
+        data: {
+          ...(data.name ? { name: data.name } : {}),
+          ...(data.canvasState ? { canvas_state: data.canvasState } : {}),
+        },
+      });
+      if (data.polygons) {
+        await tx.sketch.deleteMany({
+          where: { projectId: id },
+        });
+        for (const polygon of data.polygons) {
+          const { name, area, geojson } = polygon;
+          const geojsonStr =
+            typeof geojson === "string" ? geojson : JSON.stringify(geojson);
+
+          await tx.$queryRaw`
+            INSERT INTO "Sketch" (id, name, area, "createdAt", "projectId", geom)
+            VALUES (
+                gen_random_uuid(),
+                ${name},
+                ${area},
+                now(),
+                ${id},
+                ST_SetSRID(ST_GeomFromGeoJSON(${geojsonStr}), 4326)
+            )
+          `;
+        }
+      }
+      return updatedProject;
     });
     return result;
   }

@@ -46,16 +46,17 @@ export class SketchService {
     const savedIds = [];
 
     for (const sketch of sketches) {
-      const { name, area, geojson } = sketch;
+      const { name, area, geojson, projectId } = sketch;
       const geojsonStr =
         typeof geojson === "string" ? geojson : JSON.stringify(geojson);
       const result: any = await prisma.$queryRaw`
-        INSERT INTO "Sketch" (id, name, area, "createdAt", geom)
+        INSERT INTO "Sketch" (id, name, area, "createdAt", projectId, geom)
         VALUES (
             gen_random_uuid(),
             ${name},
             ${area},
             now(),
+            ${projectId}
             ST_SetSRID(ST_GeomFromGeoJSON(${geojsonStr}), 4326)
         )
         RETURNING id;
