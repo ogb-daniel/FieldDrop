@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { SketchCanvas } from "../components/SketchCanvas";
+import { useEffect, useRef, useState } from "react";
+import { SketchCanvas, type SketchCanvasRef } from "../components/SketchCanvas";
 import { Shield, MoreVertical, Share, Save } from "lucide-react";
 import { useParams } from "react-router-dom";
 import type { Project } from "../types/project";
@@ -8,18 +8,49 @@ import { AxiosError } from "axios";
 
 export const ProjectPage = () => {
   const { id } = useParams();
+  const canvasRef = useRef<SketchCanvasRef>(null);
+  const [projectName, setProjectName] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const [project, setProject] = useState<Project | null>(null);
 
-  const [projectName, setProjectName] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!canvasRef.current) return;
+    setIsSaving(true);
+
+    try {
+      const allShapes = canvasRef.current.getShapes();
+      const polygons = allShapes.filter((s) => s.type === "polygon");
+
+      const response = await apiClient.patch(`/projects/${id}`, {
+        name: projectName,
+        canvasState: allShapes,
+        polygons,
+      });
+      if (response.status !== 200) {
+        console.error("Failed to save sketch");
+      }
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error(error.response?.data);
+      } else if (error instanceof Error) {
+        console.error(error.message);
+      } else {
+        console.error("An error occured");
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   useEffect(() => {
     apiClient
       .get<Project>(`projects/${id}`)
       .then((res) => {
-        setProject(res.data);
         setProjectName(res.data.name);
+        setProject(res.data);
       })
       .catch((error: unknown) => {
         if (error instanceof AxiosError) {
@@ -31,23 +62,6 @@ export const ProjectPage = () => {
         }
       });
   }, [id]);
-
-  const handleSave = async () => {
-    try {
-      const response = await apiClient.patch(`/projects/${id}`, {
-        name: projectName,
-      });
-      console.log(response.data);
-    } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        console.error(error.response?.data);
-      } else if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error("An error occured");
-      }
-    }
-  };
 
   return (
     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-gray-50">
@@ -86,6 +100,7 @@ export const ProjectPage = () => {
         </button>
         <button
           onClick={handleSave}
+          disabled={isSaving}
           className="ml-2 bg-blue-50 drop-shadow-sm hover:bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1.5 rounded-md transition-colors flex items-center"
         >
           <Save size={16} className="mr-1.5" />
@@ -95,6 +110,7 @@ export const ProjectPage = () => {
 
       <div className="flex-1 w-full h-full">
         <SketchCanvas
+          project={project}
           onSketchComplete={(geojson, area) => {
             console.log("GeoJSON:", geojson, "Area:", area);
           }}

@@ -7,6 +7,7 @@ export interface BaseShape {
 }
 export interface PolygonShape extends BaseShape {
   type: "polygon";
+  name: string;
   points: Point[];
   area: number;
   geojson: unknown;

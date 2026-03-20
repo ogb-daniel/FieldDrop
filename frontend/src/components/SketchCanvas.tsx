@@ -17,6 +17,7 @@ import { Trash2 } from "lucide-react";
 import type { Point, Shape, PolygonShape, Tool } from "../types/canvas";
 import { CanvasToolbar } from "./canvas/CanvasToolbar";
 import { CanvasPropertiesPanel } from "./canvas/CanvasPropertiesPanel";
+import type { Project } from "../types/project";
 
 const MIN_SCALE = 0.1;
 const MAX_SCALE = 5;
@@ -25,11 +26,16 @@ export const SCALE_TURF = 0.00001;
 
 interface SketchCanvasProps {
   onSketchComplete: (geojson: unknown, area: number) => void;
+  project?: Project | null;
+}
+export interface SketchCanvasRef {
+  getShapes: () => Shape[];
 }
 
-export const SketchCanvas: React.FC<SketchCanvasProps> = ({
-  onSketchComplete,
-}) => {
+export const SketchCanvas = React.forwardRef<
+  SketchCanvasRef,
+  SketchCanvasProps
+>(({ onSketchComplete, project }, ref) => {
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const trRef = useRef<Konva.Transformer>(null);
@@ -39,7 +45,9 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const [tool, setTool] = useState<Tool>("select");
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [shapes, setShapes] = useState<Shape[]>(
+    project && Array.isArray(project.canvas_state) ? project.canvas_state : [],
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [activePoints, setActivePoints] = useState<Point[]>([]);
@@ -51,7 +59,9 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
   } | null>(null);
   const [mousePos, setMousePos] = useState<Point | null>(null);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
-
+  React.useImperativeHandle(ref, () => ({
+    getShapes: () => shapes,
+  }));
   useEffect(() => {
     const resize = () => {
       if (containerRef.current) {
@@ -165,6 +175,7 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
             {
               id: `poly-${Date.now()}`,
               type: "polygon",
+              name: "New Space",
               points: activePoints,
               area,
               geojson: polygon.geometry,
@@ -264,6 +275,14 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
     }
   };
 
+  const handleNameUpdate = (shapeId: string, newName: string) => {
+    setShapes(
+      shapes.map((s) =>
+        s.id === shapeId && s.type === "polygon" ? { ...s, name: newName } : s,
+      ),
+    );
+  };
+
   const handleEdgeManualUpdate = (
     shapeId: string,
     edgeIndex: number,
@@ -355,6 +374,7 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
         SCALE_TURF={SCALE_TURF}
         handleEdgeManualUpdate={handleEdgeManualUpdate}
         deleteShape={deleteShape}
+        onNameUpdate={handleNameUpdate}
       />
 
       {menuPos && selectedShapeObj?.type !== "polygon" && (
@@ -461,6 +481,17 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
 
               if (shape.type === "polygon") {
                 const flat = shape.points.flatMap((p) => [p.x, p.y]);
+
+                // Calculate visual center of mass for the text
+                let cx = 0,
+                  cy = 0;
+                shape.points.forEach((p) => {
+                  cx += p.x;
+                  cy += p.y;
+                });
+                cx /= shape.points.length;
+                cy /= shape.points.length;
+
                 return (
                   <Group
                     key={shape.id}
@@ -470,6 +501,21 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
                         e.cancelBubble = true;
                         setSelectedId(shape.id);
                       }
+                    }}
+                    draggable={tool === "select" && isSelected}
+                    onDragStart={(e) => {
+                      if (tool === "select") {
+                        e.cancelBubble = true;
+                        setSelectedId(shape.id);
+                      }
+                    }}
+                    onDragEnd={(e) => {
+                      const updatedShapes = shapes.map((s) =>
+                        s.id === shape.id
+                          ? { ...s, x: e.target.x(), y: e.target.y() }
+                          : s,
+                      ) as Shape[];
+                      setShapes(updatedShapes);
                     }}
                   >
                     <Line
@@ -483,6 +529,19 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
                       stroke={isSelected ? "#2563eb" : "#3b82f6"}
                       strokeWidth={(isSelected ? 4 : 2) / scale}
                     />
+
+                    {scale > 0.5 && (
+                      <Text
+                        x={cx - 100 / scale}
+                        y={cy - 10 / scale}
+                        width={200 / scale}
+                        text={shape.name}
+                        fontSize={16 / scale}
+                        align="center"
+                        fill="#1e3a8a"
+                        fontStyle="bold"
+                      />
+                    )}
 
                     {shape.points.map((pt, i) => {
                       const nextPt =
@@ -631,4 +690,4 @@ export const SketchCanvas: React.FC<SketchCanvasProps> = ({
       </div>
     </div>
   );
-};
+});
