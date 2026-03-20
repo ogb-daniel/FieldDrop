@@ -30,6 +30,7 @@ interface SketchCanvasProps {
 }
 export interface SketchCanvasRef {
   getShapes: () => Shape[];
+  getThumbnail: () => string | undefined;
 }
 
 export const SketchCanvas = React.forwardRef<
@@ -60,6 +61,7 @@ export const SketchCanvas = React.forwardRef<
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   React.useImperativeHandle(ref, () => ({
     getShapes: () => shapes,
+    getThumbnail: () => stageRef.current?.toDataURL({ pixelRatio: 0.5 }),
   }));
 
   useEffect(() => {

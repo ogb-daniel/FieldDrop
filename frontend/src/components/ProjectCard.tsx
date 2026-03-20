@@ -13,9 +13,22 @@ export const ProjectCard = ({ project }: ProjectCardProps) => {
   return (
     <div
       onClick={handleViewProject}
-      className="border-2 border-gray-400 h-40 rounded-lg cursor-pointer bg-gray-50 flex justify-center items-center"
+      className="relative h-40 rounded-t-lg cursor-pointer bg-gray-100"
     >
-      <p className="text-lg">{project.name}</p>
+      {project.thumbnail ? (
+        <img
+          src={project.thumbnail}
+          alt="Project Preview"
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          No Preview Available
+        </div>
+      )}
+      <p className="absolute bottom-2 left-2 text-shadow-lg text-shadow-blue-400/10 font-bold text-xl">
+        {project.name}
+      </p>
     </div>
   );
 };

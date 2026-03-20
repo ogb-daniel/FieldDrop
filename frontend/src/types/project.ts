@@ -3,4 +3,5 @@ export type Project = {
   name: string;
   sketches: [];
   canvas_state: [];
+  thumbnail: string
 };

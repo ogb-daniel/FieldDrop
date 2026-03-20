@@ -23,11 +23,12 @@ export const ProjectPage = () => {
     try {
       const allShapes = canvasRef.current.getShapes();
       const polygons = allShapes.filter((s) => s.type === "polygon");
-
+      const thumbnail = canvasRef.current.getThumbnail();
       const response = await apiClient.patch(`/projects/${id}`, {
         name: projectName,
         canvasState: allShapes,
         polygons,
+        thumbnail,
       });
       if (response.status !== 200) {
         console.error("Failed to save sketch");
