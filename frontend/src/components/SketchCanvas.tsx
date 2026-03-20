@@ -45,9 +45,8 @@ export const SketchCanvas = React.forwardRef<
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const [tool, setTool] = useState<Tool>("select");
-  const [shapes, setShapes] = useState<Shape[]>(
-    project && Array.isArray(project.canvas_state) ? project.canvas_state : [],
-  );
+  const [shapes, setShapes] = useState<Shape[]>([]);
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [activePoints, setActivePoints] = useState<Point[]>([]);
@@ -62,6 +61,15 @@ export const SketchCanvas = React.forwardRef<
   React.useImperativeHandle(ref, () => ({
     getShapes: () => shapes,
   }));
+
+  useEffect(() => {
+    const setInitStage = () => {
+      if (project && Array.isArray(project.canvas_state)) {
+        setShapes(project.canvas_state);
+      }
+    };
+    setInitStage();
+  }, [project]);
   useEffect(() => {
     const resize = () => {
       if (containerRef.current) {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SketchCanvas, type SketchCanvasRef } from "../components/SketchCanvas";
 import { Shield, MoreVertical, Share, Save } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import type { Project } from "../types/project";
 import apiClient from "../api/client";
 import { AxiosError } from "axios";
@@ -66,9 +66,12 @@ export const ProjectPage = () => {
   return (
     <div className="h-screen w-full flex flex-col relative overflow-hidden bg-gray-50">
       <div className="absolute top-4 left-4 z-20 bg-white shadow-md rounded-lg flex items-center px-3 py-2 border border-gray-200">
-        <h1 className="font-extrabold text-xl tracking-tight text-gray-900 mr-2 ml-1">
+        <Link
+          to="/"
+          className="font-extrabold text-xl tracking-tight text-gray-900 mr-2 ml-1"
+        >
           FieldDrop
-        </h1>
+        </Link>
 
         <div
           className="flex items-center px-3 py-1 hover:bg-gray-100 rounded-md cursor-pointer transition-colors group"
@@ -110,6 +113,7 @@ export const ProjectPage = () => {
 
       <div className="flex-1 w-full h-full">
         <SketchCanvas
+          ref={canvasRef}
           project={project}
           onSketchComplete={(geojson, area) => {
             console.log("GeoJSON:", geojson, "Area:", area);
