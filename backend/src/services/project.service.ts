@@ -33,7 +33,12 @@ export class ProjectService {
 
   async updateProject(
     id: string,
-    data: { name?: string; canvasState?: any[]; polygons?: SketchInput[] },
+    data: {
+      name?: string;
+      canvasState?: any[];
+      polygons?: SketchInput[];
+      thumbnail?: string;
+    },
   ) {
     const result = await prisma.$transaction(async (tx) => {
       const updatedProject = await tx.project.update({
@@ -41,6 +46,7 @@ export class ProjectService {
         data: {
           ...(data.name ? { name: data.name } : {}),
           ...(data.canvasState ? { canvas_state: data.canvasState } : {}),
+          ...(data.thumbnail ? { thumbnail: data.thumbnail } : {}),
         },
       });
       if (data.polygons) {

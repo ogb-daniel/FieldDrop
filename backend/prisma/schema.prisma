@@ -36,4 +36,5 @@ model Project {
 
   sketches Sketch[]
   canvas_state Json?
+  thumbnail String?
 }
