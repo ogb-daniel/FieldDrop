@@ -518,11 +518,33 @@ export const SketchCanvas = React.forwardRef<
                       }
                     }}
                     onDragEnd={(e) => {
-                      const updatedShapes = shapes.map((s) =>
-                        s.id === shape.id
-                          ? { ...s, x: e.target.x(), y: e.target.y() }
-                          : s,
-                      ) as Shape[];
+                      const node = e.target;
+                      const dx = node.x();
+                      const dy = node.y();
+
+                      node.x(0);
+                      node.y(0);
+
+                      const updatedShapes = shapes.map((s) => {
+                        if (s.id === shape.id && s.type === "polygon") {
+                          const newPoints = s.points.map((p) => ({
+                            x: p.x + dx,
+                            y: p.y + dy,
+                          }));
+                          const coordinates = [...newPoints, newPoints[0]].map(
+                            (p) => [p.x * SCALE_TURF, -(p.y * SCALE_TURF)],
+                          );
+                          const polygon = turf.polygon([[...coordinates]]);
+
+                          return {
+                            ...s,
+                            points: newPoints,
+                            area: turf.area(polygon),
+                            geojson: polygon.geometry,
+                          };
+                        }
+                        return s;
+                      }) as Shape[];
                       setShapes(updatedShapes);
                     }}
                   >
