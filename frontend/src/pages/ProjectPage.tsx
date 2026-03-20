@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import type { Project } from "../types/project";
 import apiClient from "../api/client";
 import { AxiosError } from "axios";
+import { cacheProject, enqueueSyncItem, getCachedProject } from "../lib/db";
 
 export const ProjectPage = () => {
   const { id } = useParams();
@@ -17,21 +18,42 @@ export const ProjectPage = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !id) return;
     setIsSaving(true);
 
     try {
       const allShapes = canvasRef.current.getShapes();
       const polygons = allShapes.filter((s) => s.type === "polygon");
       const thumbnail = canvasRef.current.getThumbnail();
-      const response = await apiClient.patch(`/projects/${id}`, {
+      const payload = {
         name: projectName,
-        canvasState: allShapes,
+        canvas_state: allShapes,
         polygons,
         thumbnail,
-      });
-      if (response.status !== 200) {
-        console.error("Failed to save sketch");
+      };
+      if (navigator.onLine) {
+        const response = await apiClient.patch(`/projects/${id}`, payload);
+        if (response.status !== 200) {
+          console.error("Failed to save sketch");
+        } else if (project) {
+          await cacheProject({ ...project, ...payload });
+        }
+      } else {
+        await enqueueSyncItem({
+          projectId: id,
+          data: payload,
+          timestamp: Date.now(),
+        });
+
+        if (project) {
+          await cacheProject({
+            ...project,
+            ...payload,
+          });
+        }
+        alert(
+          "No connection! Saved locally. Will sync automatically when online.",
+        );
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -47,19 +69,28 @@ export const ProjectPage = () => {
   };
 
   useEffect(() => {
+    if (!id) return;
     apiClient
       .get<Project>(`projects/${id}`)
       .then((res) => {
         setProjectName(res.data.name);
         setProject(res.data);
+        cacheProject(res.data).catch(console.error);
       })
-      .catch((error: unknown) => {
-        if (error instanceof AxiosError) {
-          console.error(error.response?.data);
-        } else if (error instanceof Error) {
-          console.error(error.message);
+      .catch(async (error: unknown) => {
+        console.warn("API load failed, attempting to load from local DB...");
+        const localData = await getCachedProject(id);
+        if (localData) {
+          setProjectName(localData.name);
+          setProject(localData);
         } else {
-          console.error("An error occured");
+          if (error instanceof AxiosError) {
+            console.error(error.response?.data);
+          } else if (error instanceof Error) {
+            console.error(error.message);
+          } else {
+            console.error("An error occured");
+          }
         }
       });
   }, [id]);

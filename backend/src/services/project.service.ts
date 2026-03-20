@@ -35,7 +35,7 @@ export class ProjectService {
     id: string,
     data: {
       name?: string;
-      canvasState?: any[];
+      canvas_state?: any[];
       polygons?: SketchInput[];
       thumbnail?: string;
     },
@@ -45,7 +45,7 @@ export class ProjectService {
         where: { id },
         data: {
           ...(data.name ? { name: data.name } : {}),
-          ...(data.canvasState ? { canvas_state: data.canvasState } : {}),
+          ...(data.canvas_state ? { canvas_state: data.canvas_state } : {}),
           ...(data.thumbnail ? { thumbnail: data.thumbnail } : {}),
         },
       });

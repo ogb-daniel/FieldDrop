@@ -6,7 +6,7 @@ export interface SyncItem {
   projectId: string;
   data: {
     name?: string;
-    canvasState?: unknown[];
+    canvas_state?: unknown[];
     polygons?: unknown[];
     thumbnail?: string;
   };
