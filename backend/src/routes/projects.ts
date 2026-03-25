@@ -7,5 +7,6 @@ router.post("/", ProjectController.createProject);
 router.get("/", ProjectController.getProjects);
 router.get("/:id", ProjectController.getProject);
 router.patch("/:id", ProjectController.updateProject);
+router.post("/", ProjectController.sync);
 
 export default router;
