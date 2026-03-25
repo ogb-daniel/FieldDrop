@@ -17,6 +17,12 @@ export const OfflineSketchSchema = z.object({
 export const CreateProjectSchema = z.object({
   name: z.string().optional(),
 });
+export const UpdateProjectSchema = z.object({
+  name: z.string().optional(),
+  thumbnail: z.string().optional(),
+  canvas_state: z.array(z.any()),
+  polygons: z.array(z.any()),
+});
 
 export const GetProjectSchema = z.object({
   id: z.uuid(),
@@ -27,3 +33,4 @@ export type NearbySketch = z.infer<typeof NearbySketchSchema>;
 export type OfflineSketchInput = z.infer<typeof OfflineSketchSchema>;
 export type CreateProjectInput = z.infer<typeof CreateProjectSchema>;
 export type GetProjectInput = z.infer<typeof GetProjectSchema>;
+export type UpdateProjectInput = z.infer<typeof UpdateProjectSchema>;

@@ -1,6 +1,10 @@
 import { ProjectService } from "../services/project.service.js";
 import type { Request, Response, NextFunction } from "express";
-import { CreateProjectSchema, GetProjectSchema } from "../utils/validation.js";
+import {
+  CreateProjectSchema,
+  GetProjectSchema,
+  UpdateProjectSchema,
+} from "../utils/validation.js";
 
 const projectService = new ProjectService();
 
@@ -42,14 +46,26 @@ export class ProjectController {
   }
   static async updateProject(req: Request, res: Response, next: NextFunction) {
     try {
+      const data = UpdateProjectSchema.parse(req.body);
       const result = await projectService.updateProject(
         req.params.id as string,
-        req.body,
+        data,
       );
 
       res.json(result);
     } catch (error) {
       console.log("Error updating project:", error);
+
+      next(error);
+    }
+  }
+  static async sync(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await projectService.sync(req.body);
+
+      res.json(result);
+    } catch (error) {
+      console.log("Error syncing data:", error);
 
       next(error);
     }

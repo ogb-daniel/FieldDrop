@@ -3,6 +3,7 @@ import type {
   CreateProjectInput,
   GetProjectInput,
   SketchInput,
+  UpdateProjectInput,
 } from "../utils/validation.js";
 
 export class ProjectService {
@@ -31,19 +32,16 @@ export class ProjectService {
     return result;
   }
 
-  async updateProject(
-    id: string,
-    data: {
-      name?: string;
-      canvas_state?: any[];
-      polygons?: SketchInput[];
-      thumbnail?: string;
-    },
-  ) {
+  async updateProject(id: string, data: UpdateProjectInput) {
     const result = await prisma.$transaction(async (tx) => {
-      const updatedProject = await tx.project.update({
+      const updatedProject = await tx.project.upsert({
         where: { id },
-        data: {
+        create: {
+          ...(data.name ? { name: data.name } : {}),
+          ...(data.canvas_state ? { canvas_state: data.canvas_state } : {}),
+          ...(data.thumbnail ? { thumbnail: data.thumbnail } : {}),
+        },
+        update: {
           ...(data.name ? { name: data.name } : {}),
           ...(data.canvas_state ? { canvas_state: data.canvas_state } : {}),
           ...(data.thumbnail ? { thumbnail: data.thumbnail } : {}),
@@ -74,5 +72,12 @@ export class ProjectService {
       return updatedProject;
     });
     return result;
+  }
+
+  async sync(payload: { projectId: string; data: UpdateProjectInput }[]) {
+    for (const item of payload) {
+      await this.updateProject(item.projectId, item.data);
+    }
+    return { count: payload.length };
   }
 }
