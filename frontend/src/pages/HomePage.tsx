@@ -2,16 +2,29 @@ import { useEffect, useRef, useState } from "react";
 import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import apiClient from "../api/client";
-import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
 import type { Project } from "../types/project";
 import { ProjectCard } from "../components/ProjectCard";
+import { cacheProject, getAllCachedProjects } from "../lib/db";
 
 export const HomePage = () => {
   const ref = useRef<HTMLDivElement | null>(null);
   const [projects, setProjects] = useState<Project[] | null>(null);
   useEffect(() => {
-    apiClient.get<Project[]>("/projects").then((res) => setProjects(res.data));
+    apiClient
+      .get<Project[]>("/projects")
+      .then(async (res) => {
+        setProjects(res.data);
+        for (const p of res.data) {
+          await cacheProject(p);
+        }
+      })
+      .catch(async (error) => {
+        console.error(error);
+        console.warn("Offline: Loading projects from local cache.");
+        const localProjects = await getAllCachedProjects();
+        setProjects(localProjects);
+      });
   }, []);
   const navigate = useNavigate();
   const handleMenuClick = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -22,19 +35,10 @@ export const HomePage = () => {
   };
   const handleNewProject = async () => {
     try {
-      const response = await apiClient.post<{ id: string }>("/projects", {});
-      if (response.status === 201) {
-        console.log("Success:", response.data);
-        navigate(`/project/${response.data.id}`);
-      }
+      const newId = crypto.randomUUID();
+      navigate(`/project/${newId}`);
     } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        console.error(error.response?.data);
-      } else if (error instanceof Error) {
-        console.error(error.message);
-      } else {
-        console.error("An error occured");
-      }
+      console.error("An error occured", error);
     }
   };
   return (

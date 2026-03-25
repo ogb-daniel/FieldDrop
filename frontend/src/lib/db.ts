@@ -58,3 +58,8 @@ export const enqueueSyncItem = async (item: Omit<SyncItem, "id">) => {
   const db = await getDB();
   return db.add("syncQueue", item);
 };
+
+export const getAllCachedProjects = async () => {
+  const db = await getDB();
+  return db.getAll("projects");
+};
